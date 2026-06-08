@@ -199,17 +199,20 @@ def main() -> None:
 
   
    # ── Inisialisasi DagsHub + MLflow Manual (Bypass Autodiscovery) ──
+    # ── Inisialisasi DagsHub + MLflow Manual ──
     logger.info('Inisialisasi DagsHub MLflow Tracking ...')
     
-    # Menghubungkan langsung kredensial ke environment variabel
+    # Kredensial Environment
     os.environ["MLFLOW_TRACKING_USERNAME"] = "layanan.rumahku"
     os.environ["MLFLOW_TRACKING_PASSWORD"] = os.environ.get("DAGSHUB_TOKEN", "")
     
-    # Menembak langsung URL tracking repositori DagsHub Anda
-    mlflow.set_tracking_uri("https://dagshub.com/layanan.rumahku/M构建-Sistem-Machine-Learning-VanesHasan.mlflow")
+    # Set URI Tracking Resmi DagsHub Anda
+    mlflow.set_tracking_uri("https://dagshub.com/layanan.rumahku/Membangun-Sistem-Machine-Learning-VanesHasan.mlflow")
     logger.info(f'Tracking URI: {mlflow.get_tracking_uri()}')
-    mlflow.set_experiment(args.experiment_name)
-
+    
+    # Memaksa menggunakan ID Eksperimen "0" (Eksperimen Default bawaan DagsHub)
+    # Ini trik paling aman agar terhindar dari Error 404 GetExperimentByName
+    mlflow.set_experiment(experiment_id="0")
     # ── Load Data ──
     logger.info(f'Memuat data — X: {args.x_path} | y: {args.y_path}')
     if not os.path.exists(args.x_path) or not os.path.exists(args.y_path):
