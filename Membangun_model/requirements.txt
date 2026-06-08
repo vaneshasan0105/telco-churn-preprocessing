@@ -1,0 +1,19 @@
+# requirements.txt
+# Proyek Akhir: Membangun Sistem Machine Learning — Dicoding
+# Kriteria 2: Eksperimen & Tracking (MLflow + DagsHub)
+# Environment: Python 3.12.7
+
+# ── Data Manipulation ──
+pandas>=2.2.0
+numpy>=1.26.0
+
+# ── Machine Learning ──
+scikit-learn>=1.4.0
+
+# ── Visualisasi ──
+matplotlib>=3.8.0
+seaborn>=0.13.0
+
+# ── Experiment Tracking ──
+mlflow==2.19.0
+dagshub>=0.3.25

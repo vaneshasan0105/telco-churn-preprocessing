@@ -1,0 +1,77 @@
+name: telco-churn-retraining
+
+conda_env: conda.yaml
+
+entry_points:
+  main:
+    parameters:
+      # ── Path Data ──
+      x_path:
+        type: str
+        default: "telco_preprocessing/X_processed.csv"
+      y_path:
+        type: str
+        default: "telco_preprocessing/y_processed.csv"
+
+      # ── Split ──
+      test_size:
+        type: float
+        default: 0.2
+      random_state:
+        type: float
+        default: 42
+
+      # ── Hyperparameter Random Forest ──
+      n_estimators:
+        type: float
+        default: 300
+      max_depth:
+        type: str
+        default: "None"
+      min_samples_split:
+        type: float
+        default: 5
+      min_samples_leaf:
+        type: float
+        default: 2
+      max_features:
+        type: str
+        default: "sqrt"
+      class_weight:
+        type: str
+        default: "balanced"
+      criterion:
+        type: str
+        default: "gini"
+
+      # ── MLflow / DagsHub ──
+      experiment_name:
+        type: str
+        default: "Telco-Churn-Retraining"
+      run_name:
+        type: str
+        default: "mlproject-retrain"
+      dagshub_owner:
+        type: str
+        default: "<nama_owner>"
+      dagshub_repo:
+        type: str
+        default: "<nama_repo>"
+
+    command: >
+      python train.py
+        --x_path {x_path}
+        --y_path {y_path}
+        --test_size {test_size}
+        --random_state {random_state}
+        --n_estimators {n_estimators}
+        --max_depth {max_depth}
+        --min_samples_split {min_samples_split}
+        --min_samples_leaf {min_samples_leaf}
+        --max_features {max_features}
+        --class_weight {class_weight}
+        --criterion {criterion}
+        --experiment_name {experiment_name}
+        --run_name {run_name}
+        --dagshub_owner {dagshub_owner}
+        --dagshub_repo {dagshub_repo}
