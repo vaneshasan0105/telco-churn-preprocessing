@@ -197,15 +197,16 @@ def compute_metrics(y_true, y_pred, y_prob) -> dict:
 def main() -> None:
     args = parse_args()
 
-    # ── Inisialisasi DagsHub + MLflow ──
-    # ── Inisialisasi DagsHub + MLflow ──
+  
+   # ── Inisialisasi DagsHub + MLflow Manual (Bypass Autodiscovery) ──
     logger.info('Inisialisasi DagsHub MLflow Tracking ...')
-    dagshub.init(
-        repo_owner=args.dagshub_owner,
-        repo_name=args.dagshub_repo,
-        mlflow=True,
-        root_dir=os.path.abspath(os.path.join(os.getcwd(), "../..")) # Paksa tunjuk ke root repo utama
-    )
+    
+    # Menghubungkan langsung kredensial ke environment variabel
+    os.environ["MLFLOW_TRACKING_USERNAME"] = "layanan.rumahku"
+    os.environ["MLFLOW_TRACKING_PASSWORD"] = os.environ.get("DAGSHUB_TOKEN", "")
+    
+    # Menembak langsung URL tracking repositori DagsHub Anda
+    mlflow.set_tracking_uri("https://dagshub.com/layanan.rumahku/M构建-Sistem-Machine-Learning-VanesHasan.mlflow")
     logger.info(f'Tracking URI: {mlflow.get_tracking_uri()}')
     mlflow.set_experiment(args.experiment_name)
 
