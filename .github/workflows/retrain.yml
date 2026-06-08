@@ -1,25 +1,8 @@
 # ============================================================
 # .github/workflows/retrain.yml
 #
-# CI Workflow: Automated Retraining Pipeline
+# CI Workflow: Automated Retraining Pipeline (Disesuaikan dengan struktur folder lokal)
 # Kriteria 3 — Advance: Membangun Sistem Machine Learning (Dicoding)
-#
-# Alur:
-#   1. Checkout repo & setup environment
-#   2. Preprocessing ulang data (opsional, jika data berubah)
-#   3. Jalankan MLflow Project (mlflow run .) → retraining + logging
-#   4. Upload model baru ke GitHub (commit saved_model/ ke repo)
-#   5. Build Docker image via `mlflow models build-docker`
-#   6. Push image ke Docker Hub
-#
-# GitHub Secrets yang WAJIB dikonfigurasi:
-#   - DAGSHUB_TOKEN      : Token akses DagsHub
-#   - DOCKERHUB_USERNAME : Username Docker Hub
-#   - DOCKERHUB_TOKEN    : Access Token Docker Hub (bukan password)
-#
-# GitHub Variables (Settings → Variables → Actions) — opsional:
-#   - DAGSHUB_OWNER      : Username DagsHub (default: dari env)
-#   - DAGSHUB_REPO       : Nama repo DagsHub
 # ============================================================
 
 name: "🔁 Retrain & Deploy — Telco Churn MLProject"
@@ -30,11 +13,9 @@ on:
     branches:
       - main
     paths:
-      # Jalankan hanya jika file-file kritis ini berubah
-      - 'telco_preprocessing/**'
-      - 'MLProject'
-      - 'conda.yaml'
-      - 'train.py'
+      # Pipeline berjalan jika ada perubahan di dalam folder-folder ini
+      - 'Membangun_model/telco_preprocessing/**'
+      - 'Workflow-CI/MLProject/**'
       - '.github/workflows/retrain.yml'
 
   # ── Trigger manual dari tab Actions ──
@@ -69,15 +50,9 @@ on:
         required: false
         default: 'latest'
 
-# ──────────────────────────────────────────────
-# Hak akses: baca repo + tulis konten untuk commit balik
-# ──────────────────────────────────────────────
 permissions:
   contents: write
 
-# ──────────────────────────────────────────────
-# Environment variabel global (shared antar jobs)
-# ──────────────────────────────────────────────
 env:
   PYTHON_VERSION   : "3.12.7"
   MLFLOW_VERSION   : "2.19.0"
@@ -85,6 +60,8 @@ env:
   ARTIFACT_DIR     : "artifacts"
   DOCKER_IMAGE_NAME: "${{ secrets.DOCKERHUB_USERNAME }}/telco-churn-rf"
   DOCKER_TAG       : "${{ github.event.inputs.docker_tag || 'latest' }}"
+  # Definisi lokasi folder utama proyek ML Anda
+  PROJECT_DIR      : "Workflow-CI/MLProject"
 
 jobs:
   # ════════════════════════════════════════════════════════════
@@ -95,7 +72,6 @@ jobs:
     runs-on: ubuntu-latest
 
     outputs:
-      # Teruskan nama Docker image ke job berikutnya
       docker_image: ${{ steps.set-outputs.outputs.docker_image }}
       run_id:       ${{ steps.set-outputs.outputs.run_id }}
 
@@ -114,8 +90,6 @@ jobs:
           cache: 'pip'
 
       # ── Step 3: Install MLflow & Dependencies Minimal ──
-      # Conda akan dikelola oleh `mlflow run` secara otomatis via conda.yaml
-      # Di sini kita hanya perlu mlflow CLI + dagshub untuk inisialisasi
       - name: "📦 Install MLflow CLI & DagsHub"
         run: |
           python -m pip install --upgrade pip
@@ -128,7 +102,7 @@ jobs:
             matplotlib>=3.8.0 \
             seaborn>=0.13.0
 
-      # ── Step 4: Setup Conda (dibutuhkan mlflow run dengan conda_env) ──
+      # ── Step 4: Setup Conda ──
       - name: "🐍 Setup Miniconda"
         uses: conda-incubator/setup-miniconda@v3
         with:
@@ -137,41 +111,34 @@ jobs:
           auto-update-conda: true
           auto-activate-base: true
 
-      # ── Step 5: Verifikasi File Kritis ──
+      # ── Step 5: Verifikasi File Kritis berdasarkan Folder Anda ──
       - name: "🔍 Verifikasi MLProject & Dataset"
         run: |
-          echo "=== Cek file MLProject ==="
-          test -f MLProject  && echo "✅ MLProject ditemukan"  || (echo "❌ MLProject tidak ada"; exit 1)
-          test -f conda.yaml && echo "✅ conda.yaml ditemukan" || (echo "❌ conda.yaml tidak ada"; exit 1)
-          test -f train.py   && echo "✅ train.py ditemukan"   || (echo "❌ train.py tidak ada"; exit 1)
+          echo "=== Cek file MLProject di sub-folder ==="
+          test -f ${{ env.PROJECT_DIR }}/MLProject  && echo "✅ MLProject ditemukan"  || (echo "❌ MLProject tidak ada"; exit 1)
+          test -f ${{ env.PROJECT_DIR }}/conda.yaml && echo "✅ conda.yaml ditemukan" || (echo "❌ conda.yaml tidak ada"; exit 1)
+          test -f ${{ env.PROJECT_DIR }}/train.py   && echo "✅ train.py ditemukan"   || (echo "❌ train.py tidak ada"; exit 1)
 
           echo ""
           echo "=== Cek Dataset Preprocessing ==="
-          test -f telco_preprocessing/X_processed.csv && \
-            echo "✅ X_processed.csv ($(wc -l < telco_preprocessing/X_processed.csv) baris)" || \
-            (echo "❌ X_processed.csv tidak ada"; exit 1)
-          test -f telco_preprocessing/y_processed.csv && \
-            echo "✅ y_processed.csv ($(wc -l < telco_preprocessing/y_processed.csv) baris)" || \
-            (echo "❌ y_processed.csv tidak ada"; exit 1)
+          test -f Membangun_model/telco_preprocessing/X_processed.csv && \
+            echo "✅ X_processed.csv ditemukan" || \
+            (echo "❌ X_processed.csv tidak ada di Membangun_model/telco_preprocessing/"; exit 1)
+          test -f Membangun_model/telco_preprocessing/y_processed.csv && \
+            echo "✅ y_processed.csv ditemukan" || \
+            (echo "❌ y_processed.csv tidak ada di Membangun_model/telco_preprocessing/"; exit 1)
 
-      # ── Step 6: Jalankan MLflow Project ──
+      # ── Step 6: Jalankan MLflow Project (Arahkan ke folder tujuan) ──
       - name: "🚀 Jalankan MLflow Project (mlflow run)"
         env:
           DAGSHUB_TOKEN: ${{ secrets.DAGSHUB_TOKEN }}
-          # Atur dagshub_owner dan dagshub_repo dari GitHub Variables
           DAGSHUB_OWNER: ${{ vars.DAGSHUB_OWNER }}
           DAGSHUB_REPO:  ${{ vars.DAGSHUB_REPO }}
         run: |
-          echo "▶ Menjalankan: mlflow run ."
-          echo "  n_estimators     = ${{ github.event.inputs.n_estimators || '300' }}"
-          echo "  max_depth        = ${{ github.event.inputs.max_depth || 'None' }}"
-          echo "  min_samples_split= ${{ github.event.inputs.min_samples_split || '5' }}"
-          echo "  min_samples_leaf = ${{ github.event.inputs.min_samples_leaf || '2' }}"
-          echo "  max_features     = ${{ github.event.inputs.max_features || 'sqrt' }}"
-          echo "  class_weight     = ${{ github.event.inputs.class_weight || 'balanced' }}"
-
-          # Jalankan MLflow Project dengan parameter dari input atau default
-          mlflow run . \
+          echo "▶ Menjalankan: mlflow run ${{ env.PROJECT_DIR }}"
+          
+          # Berjalan langsung mengarah ke sub-folder tempat MLProject berada
+          mlflow run ${{ env.PROJECT_DIR }} \
             --env-manager=conda \
             -P n_estimators="${{ github.event.inputs.n_estimators || '300' }}" \
             -P max_depth="${{ github.event.inputs.max_depth || 'None' }}" \
@@ -184,16 +151,18 @@ jobs:
             -P dagshub_repo="${{ vars.DAGSHUB_REPO }}" \
             --experiment-name "Telco-Churn-Retraining"
 
-      # ── Step 7: Cek keberadaan model yang disimpan ──
+      # ── Step 7: Cek keberadaan model (MLflow memproduksi hasil run di root secara default) ──
       - name: "🔎 Verifikasi Model Output"
         run: |
           if [ -d "${{ env.MODEL_LOCAL_DIR }}" ]; then
             echo "✅ Model berhasil disimpan di: ${{ env.MODEL_LOCAL_DIR }}/"
-            echo ""
-            echo "=== Isi folder model ==="
+            ls -lh ${{ env.MODEL_LOCAL_DIR }}/
+          elif [ -d "${{ env.PROJECT_DIR }}/${{ env.MODEL_LOCAL_DIR }}" ]; then
+            echo "✅ Model ditemukan di folder project. Menyalin ke root..."
+            cp -r ${{ env.PROJECT_DIR }}/${{ env.MODEL_LOCAL_DIR }} .
             ls -lh ${{ env.MODEL_LOCAL_DIR }}/
           else
-            echo "❌ Folder model tidak ditemukan: ${{ env.MODEL_LOCAL_DIR }}"
+            echo "❌ Folder model tidak ditemukan"
             exit 1
           fi
 
@@ -201,10 +170,12 @@ jobs:
       - name: "📋 Tampilkan Artefak Evaluasi"
         if: always()
         run: |
-          echo "=== Artefak yang dihasilkan ==="
+          if [ -d "${{ env.PROJECT_DIR }}/${{ env.ARTIFACT_DIR }}" ]; then
+            cp -r ${{ env.PROJECT_DIR }}/${{ env.ARTIFACT_DIR }} . 2>/dev/null || true
+          fi
           ls -lh ${{ env.ARTIFACT_DIR }}/ 2>/dev/null || echo "(folder artifacts kosong)"
 
-      # ── Step 9: Upload artefak ke GitHub Actions (untuk inspeksi) ──
+      # ── Step 9: Upload artefak ke GitHub Actions ──
       - name: "💾 Upload Artefak ke GitHub Actions"
         uses: actions/upload-artifact@v4
         with:
@@ -220,168 +191,89 @@ jobs:
           echo "docker_image=${{ env.DOCKER_IMAGE_NAME }}" >> $GITHUB_OUTPUT
           echo "run_id=${{ github.run_id }}"               >> $GITHUB_OUTPUT
 
-      # ── Step 11: Commit model baru ke repositori (Upload to GitHub) ──
+      # ── Step 11: Commit model baru ke repositori ──
       - name: "🔁 Commit & Push Model ke Repositori"
         run: |
           git config --local user.email "github-actions[bot]@users.noreply.github.com"
           git config --local user.name  "github-actions[bot]"
 
-          # Tambahkan model, artefak, dan log ke staging
           git add ${{ env.MODEL_LOCAL_DIR }}/ \
-                  ${{ env.ARTIFACT_DIR }}/ \
-                  preprocessing.log 2>/dev/null || true
+                  ${{ env.ARTIFACT_DIR }}/ 2>/dev/null || true
 
-          # Cek apakah ada perubahan nyata
           if git diff --cached --quiet; then
             echo "✅ Tidak ada perubahan model. Commit dilewati."
           else
-            TIMESTAMP=$(date -u '+%Y-%m-%d %H:%M:%S UTC')
-            N_EST="${{ github.event.inputs.n_estimators || '300' }}"
-            MAX_D="${{ github.event.inputs.max_depth || 'None' }}"
-
-            git commit -m "🤖 [CI] Retrain model — Run #${{ github.run_number }}
-
-          Timestamp    : $TIMESTAMP
-          Trigger      : ${{ github.event_name }}
-          Branch       : ${{ github.ref_name }}
-          Commit SHA   : ${{ github.sha }}
-
-          Hyperparameters:
-            n_estimators      = $N_EST
-            max_depth         = $MAX_D
-            min_samples_split = ${{ github.event.inputs.min_samples_split || '5' }}
-            min_samples_leaf  = ${{ github.event.inputs.min_samples_leaf || '2' }}
-            max_features      = ${{ github.event.inputs.max_features || 'sqrt' }}
-            class_weight      = ${{ github.event.inputs.class_weight || 'balanced' }}
-
-          Artifacts:
-            - saved_model/     (sklearn MLflow format)
-            - artifacts/*.png  (evaluation plots)
-            - artifacts/*.txt  (classification report)"
-
+            git commit -m "🤖 [CI] Retrain model — Run #${{ github.run_number }}"
             git push
             echo "✅ Model berhasil di-push ke repositori."
           fi
 
   # ════════════════════════════════════════════════════════════
   # JOB 2: BUILD & PUSH DOCKER IMAGE KE DOCKER HUB
-  # Bergantung pada keberhasilan job 'retrain'
   # ════════════════════════════════════════════════════════════
   build-and-push-docker:
     name: "🐳 Build & Push Docker Image"
     runs-on: ubuntu-latest
-    needs: retrain   # Hanya jalan jika job retrain SUKSES
+    needs: retrain
 
     steps:
-      # ── Step 1: Checkout (ambil model yang sudah di-commit) ──
-      - name: "📥 Checkout Repository (dengan model terbaru)"
+      - name: "📥 Checkout Repository"
         uses: actions/checkout@v4
         with:
-          # Pull commit terbaru agar saved_model/ yang baru di-commit ikut
           ref: ${{ github.ref }}
           fetch-depth: 1
 
-      # ── Step 2: Setup Python untuk mlflow CLI ──
       - name: "🐍 Setup Python ${{ env.PYTHON_VERSION }}"
         uses: actions/setup-python@v5
         with:
           python-version: ${{ env.PYTHON_VERSION }}
           cache: 'pip'
 
-      # ── Step 3: Install MLflow ──
       - name: "📦 Install MLflow CLI"
         run: |
           pip install --upgrade pip
           pip install mlflow==${{ env.MLFLOW_VERSION }} scikit-learn>=1.4.0
 
-      # ── Step 4: Setup Docker Buildx ──
       - name: "🔧 Setup Docker Buildx"
         uses: docker/setup-buildx-action@v3
 
-      # ── Step 5: Login ke Docker Hub menggunakan Secrets ──
       - name: "🔐 Login ke Docker Hub"
         uses: docker/login-action@v3
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      # ── Step 6: Verifikasi saved_model ada ──
       - name: "🔍 Verifikasi saved_model/"
         run: |
+          # Ambil model dari root atau dari project folder jika dicommit di sana
+          if [ ! -d "${{ env.MODEL_LOCAL_DIR }}" ] && [ -d "${{ env.PROJECT_DIR }}/${{ env.MODEL_LOCAL_DIR }}" ]; then
+            cp -r ${{ env.PROJECT_DIR }}/${{ env.MODEL_LOCAL_DIR }} .
+          fi
+          
           if [ ! -d "${{ env.MODEL_LOCAL_DIR }}" ]; then
             echo "❌ Folder ${{ env.MODEL_LOCAL_DIR }} tidak ditemukan."
-            echo "   Pastikan job 'retrain' berhasil menyimpan model."
             exit 1
           fi
-          echo "✅ saved_model/ ditemukan:"
-          ls -lh ${{ env.MODEL_LOCAL_DIR }}/
+          echo "✅ saved_model/ siap dipakai untuk Docker build."
 
-      # ── Step 7: Build Docker Image via MLflow ──
-      # `mlflow models build-docker` membangun image yang berisi
-      # model + mlflow serving server (REST API siap pakai)
       - name: "🏗️ Build Docker Image via MLflow"
         run: |
           FULL_IMAGE="${{ env.DOCKER_IMAGE_NAME }}:${{ env.DOCKER_TAG }}"
           FULL_IMAGE_SHA="${{ env.DOCKER_IMAGE_NAME }}:sha-${{ github.sha }}"
 
-          echo "▶ Membangun Docker image: $FULL_IMAGE"
-          echo "  Model path: ${{ env.MODEL_LOCAL_DIR }}"
-
-          # Build image — model di-embed langsung ke dalam image
           mlflow models build-docker \
             --model-uri "${{ env.MODEL_LOCAL_DIR }}" \
             --name "$FULL_IMAGE" \
             --enable-mlserver
 
-          # Tag tambahan dengan SHA commit untuk traceability
           docker tag "$FULL_IMAGE" "$FULL_IMAGE_SHA"
 
-          echo "✅ Image berhasil dibangun:"
-          docker images | grep "${{ secrets.DOCKERHUB_USERNAME }}/telco-churn-rf"
-
-      # ── Step 8: Push ke Docker Hub ──
       - name: "🚀 Push Docker Image ke Docker Hub"
         run: |
           FULL_IMAGE="${{ env.DOCKER_IMAGE_NAME }}:${{ env.DOCKER_TAG }}"
           FULL_IMAGE_SHA="${{ env.DOCKER_IMAGE_NAME }}:sha-${{ github.sha }}"
-
-          echo "▶ Pushing: $FULL_IMAGE"
           docker push "$FULL_IMAGE"
-
-          echo "▶ Pushing: $FULL_IMAGE_SHA"
           docker push "$FULL_IMAGE_SHA"
-
-          echo "✅ Image berhasil di-push ke Docker Hub."
-          echo "   Pull dengan: docker pull $FULL_IMAGE"
-
-      # ── Step 9: Tampilkan ringkasan di GitHub Actions Summary ──
-      - name: "📊 Ringkasan Build Docker"
-        if: always()
-        run: |
-          FULL_IMAGE="${{ env.DOCKER_IMAGE_NAME }}:${{ env.DOCKER_TAG }}"
-          echo "## 🐳 Docker Build Summary" >> $GITHUB_STEP_SUMMARY
-          echo ""                           >> $GITHUB_STEP_SUMMARY
-          echo "| Item           | Nilai                                             |" >> $GITHUB_STEP_SUMMARY
-          echo "|:---------------|:--------------------------------------------------|" >> $GITHUB_STEP_SUMMARY
-          echo "| Image Name     | \`$FULL_IMAGE\`                                  |" >> $GITHUB_STEP_SUMMARY
-          echo "| SHA Tag        | \`sha-${{ github.sha }}\`                        |" >> $GITHUB_STEP_SUMMARY
-          echo "| Run Number     | #${{ github.run_number }}                        |" >> $GITHUB_STEP_SUMMARY
-          echo "| Trigger        | ${{ github.event_name }}                         |" >> $GITHUB_STEP_SUMMARY
-          echo "| Timestamp      | $(date -u '+%Y-%m-%d %H:%M:%S UTC')              |" >> $GITHUB_STEP_SUMMARY
-          echo ""                                                                       >> $GITHUB_STEP_SUMMARY
-          echo "### 🚀 Cara Menjalankan Model (Inferensi)"                             >> $GITHUB_STEP_SUMMARY
-          echo "\`\`\`bash"                                                            >> $GITHUB_STEP_SUMMARY
-          echo "# Pull image"                                                          >> $GITHUB_STEP_SUMMARY
-          echo "docker pull $FULL_IMAGE"                                               >> $GITHUB_STEP_SUMMARY
-          echo ""                                                                       >> $GITHUB_STEP_SUMMARY
-          echo "# Jalankan REST API server (port 5001)"                                >> $GITHUB_STEP_SUMMARY
-          echo "docker run -p 5001:8080 $FULL_IMAGE"                                   >> $GITHUB_STEP_SUMMARY
-          echo ""                                                                       >> $GITHUB_STEP_SUMMARY
-          echo "# Kirim request prediksi"                                              >> $GITHUB_STEP_SUMMARY
-          echo 'curl -X POST http://localhost:5001/invocations \'                      >> $GITHUB_STEP_SUMMARY
-          echo '  -H "Content-Type: application/json" \'                              >> $GITHUB_STEP_SUMMARY
-          echo '  -d '"'"'{"dataframe_split": {"columns": [...], "data": [[...]]}}'"'" >> $GITHUB_STEP_SUMMARY
-          echo "\`\`\`"                                                                >> $GITHUB_STEP_SUMMARY
 
   # ════════════════════════════════════════════════════════════
   # JOB 3: NOTIFIKASI RINGKASAN PIPELINE
@@ -390,7 +282,7 @@ jobs:
     name: "📋 Pipeline Summary"
     runs-on: ubuntu-latest
     needs: [retrain, build-and-push-docker]
-    if: always()   # Jalankan meskipun job sebelumnya gagal
+    if: always()
 
     steps:
       - name: "📊 Ringkasan Seluruh Pipeline"
@@ -399,20 +291,8 @@ jobs:
           DOCKER_STATUS="${{ needs.build-and-push-docker.result }}"
 
           echo "## 🔁 Retrain & Deploy Pipeline — Run #${{ github.run_number }}" >> $GITHUB_STEP_SUMMARY
-          echo ""                                                                  >> $GITHUB_STEP_SUMMARY
-          echo "| Job                  | Status                                   |" >> $GITHUB_STEP_SUMMARY
-          echo "|:---------------------|:-----------------------------------------|" >> $GITHUB_STEP_SUMMARY
-          echo "| ⚙️ MLflow Retraining  | $RETRAIN_STATUS                         |" >> $GITHUB_STEP_SUMMARY
-          echo "| 🐳 Docker Build/Push | $DOCKER_STATUS                           |" >> $GITHUB_STEP_SUMMARY
-          echo ""                                                                  >> $GITHUB_STEP_SUMMARY
-          echo "**Trigger:** ${{ github.event_name }} | "                         >> $GITHUB_STEP_SUMMARY
-          echo "**Branch:** ${{ github.ref_name }} | "                            >> $GITHUB_STEP_SUMMARY
-          echo "**Commit:** \`${{ github.sha }}\`"                                >> $GITHUB_STEP_SUMMARY
-
-          if [ "$RETRAIN_STATUS" = "success" ] && [ "$DOCKER_STATUS" = "success" ]; then
-            echo ""                                                                >> $GITHUB_STEP_SUMMARY
-            echo "✅ **Pipeline berhasil! Model baru tersedia di Docker Hub.**"   >> $GITHUB_STEP_SUMMARY
-          else
-            echo ""                                                                >> $GITHUB_STEP_SUMMARY
-            echo "⚠️ **Satu atau lebih job gagal. Periksa log di atas.**"         >> $GITHUB_STEP_SUMMARY
-          fi
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Job | Status |" >> $GITHUB_STEP_SUMMARY
+          echo "|:---|:---|" >> $GITHUB_STEP_SUMMARY
+          echo "| ⚙️ MLflow Retraining | $RETRAIN_STATUS |" >> $GITHUB_STEP_SUMMARY
+          echo "| 🐳 Docker Build/Push | $DOCKER_STATUS |" >> $GITHUB_STEP_SUMMARY
