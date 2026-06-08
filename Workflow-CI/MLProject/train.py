@@ -198,11 +198,13 @@ def main() -> None:
     args = parse_args()
 
     # ── Inisialisasi DagsHub + MLflow ──
+    # ── Inisialisasi DagsHub + MLflow ──
     logger.info('Inisialisasi DagsHub MLflow Tracking ...')
     dagshub.init(
         repo_owner=args.dagshub_owner,
         repo_name=args.dagshub_repo,
         mlflow=True,
+        root_dir=os.path.abspath(os.path.join(os.getcwd(), "../..")) # Paksa tunjuk ke root repo utama
     )
     logger.info(f'Tracking URI: {mlflow.get_tracking_uri()}')
     mlflow.set_experiment(args.experiment_name)
