@@ -85,9 +85,9 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument('--run_name', type=str,
                         default='mlproject-retrain')
     parser.add_argument('--dagshub_owner', type=str,
-                        default='<nama_owner>')
+                        default=os.environ.get('DAGSHUB_OWNER', 'layanan.rumahku'))
     parser.add_argument('--dagshub_repo', type=str,
-                        default='<nama_repo>')
+                        default=os.environ.get('DAGSHUB_REPO', 'Membangun-Sistem-Machine-Learning-VanesHasan'))
 
     return parser.parse_args()
 
