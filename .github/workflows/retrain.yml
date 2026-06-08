@@ -102,28 +102,3 @@ jobs:
           FULL_IMAGE="${{ env.DOCKER_IMAGE_NAME }}:${{ env.DOCKER_TAG }}"
           docker build -t "$FULL_IMAGE" .
           docker push "$FULL_IMAGE"
-      - name: "🏗️ Build & Push via MLflow"
-        run: |
-          mkdir -p ${{ env.MODEL_LOCAL_DIR }}
-          
-          cat << 'EOF' > ${{ env.MODEL_LOCAL_DIR }}/MLmodel
-          artifact_path: model
-          flavors:
-            python_function:
-              env: {conda: conda.yaml, virtualenv: python_env.yaml}
-              loader_module: mlflow.sklearn
-              python_version: 3.12.7
-            sklearn:
-              pickled_model: model.pkl
-              serialization_format: cloudpickle
-              sklearn_version: 1.5.2
-          run_id: dummy_run_id
-          utc_time_created: '2026-06-08 11:00:00.000000'
-          EOF
-          
-          pip install mlflow==${{ env.MLFLOW_VERSION }} scikit-learn
-          
-          FULL_IMAGE="${{ env.DOCKER_IMAGE_NAME }}:${{ env.DOCKER_TAG }}"
-          mlflow models build-docker --model-uri "${{ env.MODEL_LOCAL_DIR }}" --name "$FULL_IMAGE" --enable-mlserver
-          docker push "$FULL_IMAGE"
-      
