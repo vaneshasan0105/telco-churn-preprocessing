@@ -83,6 +83,25 @@ jobs:
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: "📦 Buat Dockerfile Manual (Bypass MLflow Lock)"
+        run: |
+          # Membuat Dockerfile standar industri secara instan di dalam runner
+          cat << 'EOF' > Dockerfile
+          FROM python:3.12.7-slim
+          WORKDIR /app
+          RUN apt-get update && apt-get install -y libgomp1 && rm -rf /var/lib/apt/lists/*
+          COPY . /app
+          RUN pip install --no-cache-dir mlflow==2.19.0 scikit-learn pandas numpy
+          EXPOSE 5001
+          CMD ["mlflow", "models", "serve", "-m", "saved_model", "--host", "0.0.0.0", "--port", "5001", "--no-conda"]
+          EOF
+
+      - name: "🏗️ Build dan Push ke Docker Hub"
+        run: |
+          FULL_IMAGE="${{ env.DOCKER_IMAGE_NAME }}:${{ env.DOCKER_TAG }}"
+          docker build -t "$FULL_IMAGE" .
+          docker push "$FULL_IMAGE"
       - name: "🏗️ Build & Push via MLflow"
         run: |
           mkdir -p ${{ env.MODEL_LOCAL_DIR }}
