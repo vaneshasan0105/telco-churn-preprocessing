@@ -49,7 +49,6 @@ jobs:
       - name: "🔍 Deteksi & Normalisasi Folder Proyek"
         id: find-dir
         run: |
-          # Mendeteksi folder apakah menggunakan spasi backslash atau nama standar
           TARGET_DIR=$(find . -type d -path "./Workflow-CI*MLProject" | head -n 1)
           if [ -z "$TARGET_DIR" ]; then
             echo "❌ Folder Workflow-CI/MLProject tidak ditemukan!"
@@ -64,19 +63,7 @@ jobs:
           DAGSHUB_OWNER: ${{ vars.DAGSHUB_OWNER }}
           DAGSHUB_REPO:  ${{ vars.DAGSHUB_REPO }}
         run: |
-          # Berjalan langsung di dalam folder proyek yang terdeteksi
-          mlflow run "$PROJECT_PATH" \
-            --env-manager=conda \
-            -P n_estimators="300" \
-            -P max_depth="None" \
-            -P min_samples_split="5" \
-            -P min_samples_leaf="2" \
-            -P max_features="sqrt" \
-            -P class_weight="balanced" \
-            -P run_name="ci-run-${{ github.run_number }}" \
-            -P dagshub_owner="${{ vars.DAGSHUB_OWNER }}" \
-            -P dagshub_repo="${{ vars.DAGSHUB_REPO }}" \
-            --experiment-name "Telco-Churn-Retraining"
+          mlflow run "$PROJECT_PATH" --env-manager=conda -P n_estimators="300" -P max_depth="None" -P min_samples_split="5" -P min_samples_leaf="2" -P max_features="sqrt" -P class_weight="balanced" -P run_name="ci-run-${{ github.run_number }}" -P dagshub_owner="${{ vars.DAGSHUB_OWNER }}" -P dagshub_repo="${{ vars.DAGSHUB_REPO }}" --experiment-name "Telco-Churn-Retraining"
 
       - name: "🔎 Ambil Output Model"
         run: |
@@ -107,7 +94,6 @@ jobs:
 
       - name: "🏗️ Build & Push via MLflow"
         run: |
-          # Menggunakan model dummy jika model retraining belum ter-commit untuk menghindari crash pertama
           if [ ! -d "${{ env.MODEL_LOCAL_DIR }}" ]; then
             mkdir -p ${{ env.MODEL_LOCAL_DIR }}
             echo "Format model fallback" > ${{ env.MODEL_LOCAL_DIR }}/MLmodel
