@@ -1,0 +1,14 @@
+aliases: []
+creation_timestamp: 1780926948409
+current_stage: None
+description: null
+last_updated_timestamp: 1780926948409
+name: TelcoChurn-RF-MLProject
+run_id: 554d136c2331472eaa143c5e8ce8ea94
+run_link: null
+source: file:///C:/Users/Vanes Hasan/Desktop/SMSML_VanesHasan/Workflow-CI/MLProject/mlruns/0/554d136c2331472eaa143c5e8ce8ea94/artifacts/model
+status: READY
+status_message: null
+storage_location: file:///C:/Users/Vanes Hasan/Desktop/SMSML_VanesHasan/Workflow-CI/MLProject/mlruns/0/554d136c2331472eaa143c5e8ce8ea94/artifacts/model
+user_id: null
+version: 1

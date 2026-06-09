@@ -1,0 +1,15 @@
+artifact_uri: file:///C:/Users/Vanes Hasan/Desktop/SMSML_VanesHasan/Workflow-CI/MLProject/mlruns/0/554d136c2331472eaa143c5e8ce8ea94/artifacts
+end_time: 1780926948609
+entry_point_name: ''
+experiment_id: '0'
+lifecycle_stage: active
+run_id: 554d136c2331472eaa143c5e8ce8ea94
+run_name: mlproject-retrain
+run_uuid: 554d136c2331472eaa143c5e8ce8ea94
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1780926840714
+status: 3
+tags: []
+user_id: layanan.rumahku

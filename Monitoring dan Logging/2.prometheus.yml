@@ -1,0 +1,80 @@
+# ============================================================
+# 2.prometheus.yml
+#
+# Konfigurasi Prometheus untuk menarik (scraping) metrik dari
+# Telco Churn Inference Server (3.prometheus_exporter.py).
+#
+# Cara menjalankan Prometheus dengan file ini:
+#   docker run -d \
+#     --name prometheus \
+#     --network host \
+#     -v $(pwd)/2.prometheus.yml:/etc/prometheus/prometheus.yml \
+#     -p 9090:9090 \
+#     prom/prometheus:latest
+#
+#   Atau jika menggunakan prometheus binary:
+#   ./prometheus --config.file=2.prometheus.yml
+#
+# Akses UI Prometheus: http://localhost:9090
+# ============================================================
+
+global:
+  # Seberapa sering Prometheus menarik metrik dari semua target
+  scrape_interval: 15s
+
+  # Timeout per scrape
+  scrape_timeout: 10s
+
+  # Seberapa sering rules evaluasi dijalankan (untuk alerting)
+  evaluation_interval: 15s
+
+  # Label global yang ditambahkan ke semua time series
+  external_labels:
+    monitor    : 'telco-churn-monitor'
+    environment: 'local-development'
+    project    : 'dicoding-mlsystem'
+
+# ──────────────────────────────────────────────────────────────
+# ALERTMANAGER — konfigurasi pengiriman alert
+# (opsional, aktifkan jika Alertmanager berjalan)
+# ──────────────────────────────────────────────────────────────
+# alerting:
+#   alertmanagers:
+#     - static_configs:
+#         - targets:
+#             - 'localhost:9093'   # Port default Alertmanager
+
+# ──────────────────────────────────────────────────────────────
+# RULE FILES — file rules untuk alerting
+# ──────────────────────────────────────────────────────────────
+rule_files:
+  - 'alert_rules.yml'   # Akan dibuat di bawah
+
+# ══════════════════════════════════════════════════════════════
+# SCRAPE CONFIGS — daftar target yang di-scrape Prometheus
+# ══════════════════════════════════════════════════════════════
+scrape_configs:
+
+  # ── 1. Self-monitoring: Prometheus itu sendiri ──
+  - job_name: 'prometheus'
+    static_configs:
+      - targets:
+          - 'localhost:9090'
+    metrics_path: '/metrics'
+
+  # ── 2. Telco Churn Inference Server (FastAPI) ──
+  # Target utama: endpoint /metrics dari 3.prometheus_exporter.py
+  # ── 2. Telco Churn Inference Server (FastAPI) ──
+  # Target utama: endpoint /metrics dari 3.prometheus_exporter.py
+  - job_name: 'telco-churn-inference'
+    scrape_interval: 10s       # Lebih sering dari global (real-time monitoring)
+    scrape_timeout : 8s
+    metrics_path   : '/metrics'
+    static_configs:
+      - targets:
+          - 'host.docker.internal:8000'   # <-- UBAH DI SINI (Khusus Windows Docker)
+        labels:
+          service    : 'inference-api'
+          model      : 'random-forest'
+          dataset    : 'telco-churn'
+          component  : 'ml-serving'

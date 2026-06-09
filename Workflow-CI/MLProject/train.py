@@ -207,9 +207,9 @@ def main() -> None:
     os.environ["MLFLOW_TRACKING_PASSWORD"] = os.environ.get("DAGSHUB_TOKEN", "")
     
     # Set URI Tracking Resmi DagsHub Anda
-    mlflow.set_tracking_uri("https://dagshub.com/layanan.rumahku/Membangun-Sistem-Machine-Learning-VanesHasan.mlflow")
+    #mlflow.set_tracking_uri("https://dagshub.com/layanan.rumahku/Membangun-Sistem-Machine-Learning-VanesHasan.mlflow")
     logger.info(f'Tracking URI: {mlflow.get_tracking_uri()}')
-    
+    mlflow.set_tracking_uri("file:./mlruns")
     # Memaksa menggunakan ID Eksperimen "0" (Eksperimen Default bawaan DagsHub)
     # Ini trik paling aman agar terhindar dari Error 404 GetExperimentByName
     mlflow.set_experiment(experiment_id="0")
