@@ -1,0 +1,32 @@
+digest: fd583bb3
+name: dataset
+profile: '{"num_rows": 1409, "num_elements": 42270}'
+schema: '{"mlflow_colspec": [{"type": "long", "name": "gender", "required": true},
+  {"type": "double", "name": "SeniorCitizen", "required": true}, {"type": "long",
+  "name": "Partner", "required": true}, {"type": "long", "name": "Dependents", "required":
+  true}, {"type": "double", "name": "tenure", "required": true}, {"type": "long",
+  "name": "PhoneService", "required": true}, {"type": "long", "name": "PaperlessBilling",
+  "required": true}, {"type": "double", "name": "MonthlyCharges", "required": true},
+  {"type": "double", "name": "TotalCharges", "required": true}, {"type": "boolean",
+  "name": "MultipleLines_No phone service", "required": true}, {"type": "boolean",
+  "name": "MultipleLines_Yes", "required": true}, {"type": "boolean", "name": "InternetService_Fiber
+  optic", "required": true}, {"type": "boolean", "name": "InternetService_No", "required":
+  true}, {"type": "boolean", "name": "OnlineSecurity_No internet service", "required":
+  true}, {"type": "boolean", "name": "OnlineSecurity_Yes", "required": true}, {"type":
+  "boolean", "name": "OnlineBackup_No internet service", "required": true}, {"type":
+  "boolean", "name": "OnlineBackup_Yes", "required": true}, {"type": "boolean", "name":
+  "DeviceProtection_No internet service", "required": true}, {"type": "boolean", "name":
+  "DeviceProtection_Yes", "required": true}, {"type": "boolean", "name": "TechSupport_No
+  internet service", "required": true}, {"type": "boolean", "name": "TechSupport_Yes",
+  "required": true}, {"type": "boolean", "name": "StreamingTV_No internet service",
+  "required": true}, {"type": "boolean", "name": "StreamingTV_Yes", "required": true},
+  {"type": "boolean", "name": "StreamingMovies_No internet service", "required": true},
+  {"type": "boolean", "name": "StreamingMovies_Yes", "required": true}, {"type": "boolean",
+  "name": "Contract_One year", "required": true}, {"type": "boolean", "name": "Contract_Two
+  year", "required": true}, {"type": "boolean", "name": "PaymentMethod_Credit card
+  (automatic)", "required": true}, {"type": "boolean", "name": "PaymentMethod_Electronic
+  check", "required": true}, {"type": "boolean", "name": "PaymentMethod_Mailed check",
+  "required": true}]}'
+source: '{"tags": {"mlflow.user": "Vanes Hasan", "mlflow.source.name": "modelling.py",
+  "mlflow.source.type": "LOCAL"}}'
+source_type: code

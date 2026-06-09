@@ -1,28 +1,12 @@
-name: telco-churn-mlproject-env
-
+name: telco-churn-env
 channels:
   - defaults
   - conda-forge
-
 dependencies:
-  # ── Python Runtime ──
-  - python=3.12.7
-
-  # ── Data & ML (via conda-forge untuk kompatibilitas Python 3.12) ──
+  - python=3.11
   - pip
-
   - pip:
-    # ── Data Manipulation ──
-    - pandas>=2.2.0
-    - numpy>=1.26.0
-
-    # ── Machine Learning ──
-    - scikit-learn>=1.4.0
-
-    # ── Visualisasi (untuk artefak plot) ──
-    - matplotlib>=3.8.0
-    - seaborn>=0.13.0
-
-    # ── Experiment Tracking ──
     - mlflow==2.19.0
-    - dagshub>=0.3.25
+    - scikit-learn==1.9.0
+    - pandas
+    - numpy

@@ -1,0 +1,38 @@
+=== Classification Report — Best Random Forest ===
+
+              precision    recall  f1-score   support
+
+No Churn (0)       0.90      0.77      0.83      1035
+   Churn (1)       0.54      0.77      0.63       374
+
+    accuracy                           0.77      1409
+   macro avg       0.72      0.77      0.73      1409
+weighted avg       0.81      0.77      0.78      1409
+
+
+=== Best Hyperparameters ===
+{
+  "n_estimators": 750,
+  "min_samples_split": 5,
+  "min_samples_leaf": 4,
+  "max_features": "log2",
+  "max_depth": 10,
+  "criterion": "gini",
+  "class_weight": "balanced",
+  "bootstrap": true
+}
+
+=== Test Metrics ===
+{
+  "accuracy": 0.765791,
+  "precision": 0.541509,
+  "recall": 0.76738,
+  "f1_score": 0.634956,
+  "roc_auc": 0.844153,
+  "specificity": 0.765217,
+  "balanced_accuracy": 0.766299,
+  "tp": 287.0,
+  "tn": 792.0,
+  "fp": 243.0,
+  "fn": 87.0
+}

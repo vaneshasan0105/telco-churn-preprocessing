@@ -1,0 +1,15 @@
+artifact_uri: file:///C:/Users/Vanes%20Hasan/Desktop/FINAL_SMSML_Vanes-Hasan/Membangun_model/mlruns/865890869177432413/4d41c9ca3d9442d580608270882e10db/artifacts
+end_time: 1781023637615
+entry_point_name: ''
+experiment_id: '865890869177432413'
+lifecycle_stage: active
+run_id: 4d41c9ca3d9442d580608270882e10db
+run_name: RandomForest-Basic
+run_uuid: 4d41c9ca3d9442d580608270882e10db
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1781023595335
+status: 3
+tags: []
+user_id: Vanes Hasan
