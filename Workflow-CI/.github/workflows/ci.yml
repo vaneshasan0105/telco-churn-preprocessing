@@ -1,4 +1,4 @@
-name: CI - Train Telco Churn Model
+name: CI - Retrain Telco Churn Model
 
 on:
   push:
@@ -7,15 +7,15 @@ on:
     branches: [ main ]
 
 jobs:
-  train:
+  retrain:
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Set up Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: '3.11'
 
@@ -24,12 +24,12 @@ jobs:
           pip install mlflow==2.19.0 scikit-learn==1.9.0 pandas numpy
 
       - name: Run MLflow Project
-        working-directory: MLProject
         run: |
+          cd MLProject
           mlflow run . --env-manager=local
 
       - name: Upload MLflow artifacts
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: mlruns
           path: MLProject/mlruns/

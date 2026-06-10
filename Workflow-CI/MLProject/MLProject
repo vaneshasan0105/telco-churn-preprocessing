@@ -4,9 +4,4 @@ conda_env: conda.yaml
 
 entry_points:
   main:
-    parameters:
-      X_PATH: {type: str, default: "telco_preprocessing/X_processed.csv"}
-      Y_PATH: {type: str, default: "telco_preprocessing/y_processed.csv"}
-      TEST_SIZE: {type: float, default: 0.2}
-      RANDOM_STATE: {type: int, default: 42}
     command: "python modelling.py"

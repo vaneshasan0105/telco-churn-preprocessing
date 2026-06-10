@@ -1,14 +1,13 @@
 """
-modelling.py — Workflow CI
-===========================
-File ini digunakan oleh MLflow Project (MLProject) pada Kriteria 3.
-Kompatibel dengan GitHub Actions CI pipeline.
+modelling.py — MLflow Project (Workflow CI)
+============================================
+Dijalankan oleh: mlflow run . --env-manager=local
+Path data menggunakan path RELATIF agar kompatibel dengan GitHub Actions runner.
 """
 
 import os
 import logging
 import warnings
-import sys
 
 import pandas as pd
 from sklearn.ensemble import RandomForestClassifier
@@ -22,35 +21,53 @@ warnings.filterwarnings('ignore')
 logging.basicConfig(level=logging.INFO, format='%(asctime)s | %(levelname)s | %(message)s')
 logger = logging.getLogger(__name__)
 
-X_PATH       = os.getenv('X_PATH', 'telco_preprocessing/X_processed.csv')
-Y_PATH       = os.getenv('Y_PATH', 'telco_preprocessing/y_processed.csv')
-TEST_SIZE    = float(os.getenv('TEST_SIZE', '0.2'))
-RANDOM_STATE = int(os.getenv('RANDOM_STATE', '42'))
+# ── Path RELATIF — wajib agar tidak error di GitHub Actions ──
+# Script ini dijalankan dari dalam folder MLProject oleh mlflow run
+X_PATH       = 'telco_preprocessing/X_processed.csv'
+Y_PATH       = 'telco_preprocessing/y_processed.csv'
+TEST_SIZE    = 0.2
+RANDOM_STATE = 42
 
-mlflow.sklearn.autolog()
+def main():
+    # Tracking lokal — mlruns tersimpan di dalam folder MLProject
+    mlflow.set_experiment('Telco-Churn-CI')
+    mlflow.sklearn.autolog()
 
-X = pd.read_csv(X_PATH)
-y = pd.read_csv(Y_PATH).squeeze()
+    logger.info(f'Membaca data dari: {X_PATH}')
+    X = pd.read_csv(X_PATH)
+    y = pd.read_csv(Y_PATH).squeeze()
+    logger.info(f'Data dimuat — X: {X.shape}, y: {y.shape}')
 
-X_train, X_test, y_train, y_test = train_test_split(
-    X, y, test_size=TEST_SIZE, random_state=RANDOM_STATE, stratify=y
-)
+    X_train, X_test, y_train, y_test = train_test_split(
+        X, y,
+        test_size=TEST_SIZE,
+        random_state=RANDOM_STATE,
+        stratify=y,
+    )
 
-with mlflow.start_run():
-    model = RandomForestClassifier(n_estimators=100, random_state=RANDOM_STATE, n_jobs=-1)
-    model.fit(X_train, y_train)
+    with mlflow.start_run(run_name='RF-CI-Run'):
+        model = RandomForestClassifier(
+            n_estimators=100,
+            random_state=RANDOM_STATE,
+            n_jobs=-1,
+        )
+        model.fit(X_train, y_train)
 
-    y_pred = model.predict(X_test)
-    y_prob = model.predict_proba(X_test)[:, 1]
+        y_pred = model.predict(X_test)
+        y_prob = model.predict_proba(X_test)[:, 1]
 
-    acc = accuracy_score(y_test, y_pred)
-    f1  = f1_score(y_test, y_pred)
-    auc = roc_auc_score(y_test, y_prob)
+        acc = accuracy_score(y_test, y_pred)
+        f1  = f1_score(y_test, y_pred)
+        auc = roc_auc_score(y_test, y_prob)
 
-    logger.info(f'Accuracy: {acc:.4f} | F1: {f1:.4f} | AUC: {auc:.4f}')
-    mlflow.log_metric('test_accuracy', acc)
-    mlflow.log_metric('test_f1', f1)
-    mlflow.log_metric('test_roc_auc', auc)
+        mlflow.log_metric('test_accuracy', acc)
+        mlflow.log_metric('test_f1', f1)
+        mlflow.log_metric('test_roc_auc', auc)
 
-    mlflow.sklearn.log_model(model, artifact_path='model')
-    logger.info('Model berhasil disimpan.')
+        logger.info(f'Accuracy : {acc:.4f}')
+        logger.info(f'F1 Score : {f1:.4f}')
+        logger.info(f'ROC-AUC  : {auc:.4f}')
+        logger.info('Training selesai — semua artifact tersimpan lokal di mlruns/')
+
+if __name__ == '__main__':
+    main()
